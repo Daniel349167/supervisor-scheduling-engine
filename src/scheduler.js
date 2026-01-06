@@ -89,6 +89,7 @@ const nextStates = (state, config) => {
     inductionDays,
     minP,
     minD,
+    maxPFirst,
     maxP,
     maxD,
     targetPFirst,
@@ -158,8 +159,9 @@ const nextStates = (state, config) => {
     }
     case STATUS.P: {
       const target = state.firstCycle ? targetPFirst : targetP
+      const maxPCurrent = state.firstCycle ? maxPFirst : maxP
       const options = []
-      const canStay = state.elapsed < maxP
+      const canStay = state.elapsed < maxPCurrent
       const canLeave = state.elapsed >= minP
 
       if (canStay && state.elapsed < target) {
@@ -244,16 +246,19 @@ const buildFlexibleSchedules = ({
 }) => {
   const minP = 2
   const minD = 1
-  const maxP = Math.max(minP, workDays + restDays)
-  const maxD = Math.max(minD, restDays - 2)
-  const targetPFirst = clamp(workDays - inductionDays, minP, maxP)
+  const baseRest = restDays - 2
+  const maxPFirst = Math.max(0, workDays - inductionDays)
+  const maxP = workDays
+  const maxD = Math.max(minD, baseRest + workDays)
+  const targetPFirst = clamp(workDays - inductionDays, minP, maxPFirst)
   const targetP = clamp(workDays, minP, maxP)
-  const targetD = clamp(restDays - 2, minD, maxD)
+  const targetD = clamp(baseRest, minD, maxD)
 
   const config = {
     inductionDays,
     minP,
     minD,
+    maxPFirst,
     maxP,
     maxD,
     targetPFirst,

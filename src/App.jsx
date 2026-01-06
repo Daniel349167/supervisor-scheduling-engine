@@ -24,7 +24,14 @@ function App() {
     if (schedule?.error) {
       return schedule
     }
-    return { ...schedule, meta: { displayDays: initialInputs.totalDays, dayOffset } }
+    return {
+      ...schedule,
+      meta: {
+        displayDays: initialInputs.totalDays,
+        dayOffset,
+        inductionDays: initialInputs.inductionDays,
+      },
+    }
   })
 
   const handleChange = (field) => (event) => {
@@ -60,6 +67,10 @@ function App() {
 
     if (Number.isFinite(workDays) && Number.isFinite(inductionDays) && workDays <= inductionDays) {
       issues.push('Los dias de trabajo (N) deben ser mayores que la induccion.')
+    }
+
+    if (Number.isFinite(workDays) && Number.isFinite(inductionDays) && workDays - inductionDays < 2) {
+      issues.push('El primer ciclo debe tener al menos 2 dias de perforacion (N - induccion).')
     }
 
     return issues
@@ -118,7 +129,11 @@ function App() {
     }
     setResult({
       ...schedule,
-      meta: { displayDays: normalized.totalDays, dayOffset: dayOffsetValue },
+      meta: {
+        displayDays: normalized.totalDays,
+        dayOffset: dayOffsetValue,
+        inductionDays: normalized.inductionDays,
+      },
     })
   }
 
@@ -129,8 +144,10 @@ function App() {
   }
 
   const summaryDay = (day) => {
-    const label = dayLabel(day)
-    return label === '' ? 'Antes del dia 1' : label
+    if (day < dayOffset) {
+      return day === 0 ? 'S' : `I${day}`
+    }
+    return dayLabel(day)
   }
 
   const dayList = (days) => {
@@ -143,6 +160,23 @@ function App() {
     }
     const head = labeledDays.slice(0, 12).join(', ')
     return `${head} ... (+${labeledDays.length - 12})`
+  }
+
+  const headerLabel = (day) => {
+    if (day < dayOffset) {
+      return day === 0 ? 'S' : `I${day}`
+    }
+    return dayLabel(day)
+  }
+
+  const formatPatternIssue = (issue) => {
+    const match = issue.match(/(\d+)$/)
+    if (!match) {
+      return issue
+    }
+    const dayIndex = Number(match[1]) - 1
+    const label = summaryDay(dayIndex)
+    return issue.replace(/(\d+)$/, label)
   }
 
   const statusClass = (status) => {
@@ -374,7 +408,7 @@ function App() {
                   <strong>Detalle de patrones invalidos</strong>
                   <ul>
                     {result.issues.patternIssues.slice(0, 6).map((issue) => (
-                      <li key={issue}>{issue}</li>
+                      <li key={issue}>{formatPatternIssue(issue)}</li>
                     ))}
                   </ul>
                   {result.issues.patternIssues.length > 6 && (
@@ -395,7 +429,7 @@ function App() {
                     >
                       {Array.from({ length: scheduleDays }, (_, day) => (
                         <div key={`day-${day}`} className="cell cell-day">
-                          {dayLabel(day)}
+                          {headerLabel(day)}
                         </div>
                       ))}
                     </div>
