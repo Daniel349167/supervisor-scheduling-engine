@@ -52,11 +52,17 @@ mostrar cero problemas. Para probarlas:
 - 14x7, induccion 5, total 90 dias
 - 21x7, induccion 3, total 90 dias
 - 10x5, induccion 2, total 90 dias
-- 14x6, induccion 4, total 90 dias
+- 14x6, induccion 4, total 950 dias
 
 ## Scripts utiles
 - `npm run dev`: servidor local
 - `npm run build`: build de produccion
 - `npm run preview`: preview del build
 
-
+## Deploy
+GitHub Pages (GitHub Actions):
+1. El `base` esta configurado en `vite.config.js` como `/cronograma-supervisores/`.
+2. Sube los cambios a GitHub (`main` o `master`).
+3. En GitHub: Settings -> Pages -> Build and deployment -> Source: GitHub Actions.
+4. El workflow `.github/workflows/deploy.yml` publicara automaticamente.
+5. URL esperada: `https://daniel349167.github.io/cronograma-supervisores/`.
