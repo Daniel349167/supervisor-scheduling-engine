@@ -98,15 +98,18 @@ function App() {
     setResult(generateSchedule({ ...normalized, mode, qa: qaConfig }))
   }
 
+  const dayLabel = (day) => day + 1
+
   const dayList = (days) => {
     if (!days || days.length === 0) {
       return '0'
     }
-    if (days.length <= 12) {
-      return days.join(', ')
+    const labeledDays = days.map(dayLabel)
+    if (labeledDays.length <= 12) {
+      return labeledDays.join(', ')
     }
-    const head = days.slice(0, 12).join(', ')
-    return `${head} ... (+${days.length - 12})`
+    const head = labeledDays.slice(0, 12).join(', ')
+    return `${head} ... (+${labeledDays.length - 12})`
   }
 
   const statusClass = (status) => {
@@ -286,11 +289,11 @@ function App() {
               <div className="summary">
                 <div>
                   <span className="summary-label">S3 sube dia</span>
-                  <strong>{result.s3Start}</strong>
+                  <strong>{dayLabel(result.s3Start)}</strong>
                 </div>
                 <div>
                   <span className="summary-label">Regla estricta desde</span>
-                  <strong>{result.enforceDay}</strong>
+                  <strong>{dayLabel(result.enforceDay)}</strong>
                 </div>
                 <div>
                   <span className="summary-label">Dias mostrados</span>
@@ -358,7 +361,7 @@ function App() {
                     >
                       {Array.from({ length: totalDays }, (_, day) => (
                         <div key={`day-${day}`} className="cell cell-day">
-                          {day}
+                          {dayLabel(day)}
                         </div>
                       ))}
                     </div>

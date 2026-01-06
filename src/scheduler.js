@@ -331,11 +331,11 @@ const validatePatterns = (label, schedule) => {
     const next = schedule[day + 1]
 
     if (current === STATUS.S && next === STATUS.S) {
-      issues.push(`${label}: S-S en dia ${day}`)
+      issues.push(`${label}: S-S en dia ${day + 1}`)
     }
 
     if (current === STATUS.S && next === STATUS.B) {
-      issues.push(`${label}: S-B en dia ${day}`)
+      issues.push(`${label}: S-B en dia ${day + 1}`)
     }
   }
 
@@ -355,7 +355,7 @@ const validatePatterns = (label, schedule) => {
     const prev = start > 0 ? schedule[start - 1] : null
     const next = day < schedule.length ? schedule[day] : null
     if (length === 1 && prev !== STATUS.P && next !== STATUS.P && start > 0 && day < schedule.length) {
-      issues.push(`${label}: P de 1 dia en ${start}`)
+      issues.push(`${label}: P de 1 dia en ${start + 1}`)
     }
   }
 
