@@ -81,6 +81,53 @@
   gap: 16px;
 }
 
+.qa {
+  margin-top: 6px;
+  padding-top: 14px;
+  border-top: 1px dashed var(--line);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.qa-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.qa-title {
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.toggle,
+.check {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.toggle {
+  font-weight: 600;
+  color: var(--muted);
+}
+
+.qa-options {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.check {
+  font-size: 0.9rem;
+  color: var(--muted);
+}
+
+.qa input {
+  accent-color: var(--accent);
+}
+
 .field {
   display: flex;
   flex-direction: column;

@@ -1,16 +1,62 @@
-# React + Vite
+# Cronos Supervisores
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Aplicacion web en React (Vite) que genera un cronograma para 3 supervisores de
+perforacion cumpliendo las reglas del enunciado: siempre 2 perforando, nunca 3,
+S1 fijo y S2/S3 ajustables.
 
-Currently, two official plugins are available:
+## Reglas y estados
+- S: Subida (1 dia)
+- I: Induccion (1 a 5 dias)
+- P: Perforacion
+- B: Bajada (1 dia)
+- D: Descanso
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## Algoritmo (resumen)
+- S1 se genera con el regimen fijo N x M.
+- S3 se programa para iniciar su subida antes de la primera bajada de S1.
+- S2 y S3 se ajustan con busqueda DFS + memoizacion para que, desde que S3
+  entra, siempre existan exactamente 2 supervisores perforando.
+- Validaciones adicionales: no S-S, no S-B y no P de 1 dia.
 
-## React Compiler
+El codigo principal esta en `src/scheduler.js`.
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## Requisitos
+- Node.js 18+ (recomendado)
 
-## Expanding the ESLint configuration
+## Instalacion
+```bash
+npm install
+```
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+## Uso local
+```bash
+npm run dev
+```
+
+1. Ingresa N x M, dias de induccion y total de dias.
+2. Presiona "Calcular cronograma".
+3. Revisa la grilla y las alertas.
+
+## Modo QA (probar alertas)
+La app genera cronogramas correctos por defecto, por eso las alertas pueden
+mostrar cero problemas. Para probarlas:
+
+1. Activa "Modo QA" en el panel de configuracion.
+2. Opcional:
+   - "Usar cronograma base (sin ajustes)" muestra un caso con 1 perforando.
+   - "Forzar 3 perforando (1 dia)" inyecta un dia con 3 perforando.
+   - "Forzar 1 perforando (post S3)" inyecta un dia con 1 perforando.
+3. Vuelve a presionar "Calcular cronograma".
+
+## Casos de prueba obligatorios
+- 14x7, induccion 5, total 90 dias
+- 21x7, induccion 3, total 90 dias
+- 10x5, induccion 2, total 90 dias
+- 14x6, induccion 4, total 90 dias
+
+## Scripts utiles
+- `npm run dev`: servidor local
+- `npm run build`: build de produccion
+- `npm run preview`: preview del build
+
+

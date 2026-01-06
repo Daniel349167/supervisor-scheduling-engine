@@ -362,44 +362,14 @@ const validatePatterns = (label, schedule) => {
   return issues
 }
 
-export const generateSchedule = ({
-  workDays,
-  restDays,
-  inductionDays,
-  totalDays,
+const buildResultFromSchedules = ({
+  s1Schedule,
+  s2Schedule,
+  s3Schedule,
+  enforceDay,
+  s3Start,
 }) => {
-  const s1Schedule = buildFixedSchedule({
-    totalDays,
-    startDay: 0,
-    workDays,
-    restDays,
-    inductionDays,
-  })
-
-  const firstB = s1Schedule.indexOf(STATUS.B)
-  const s3Start =
-    firstB === -1 ? totalDays : Math.max(0, firstB - (inductionDays + 1))
-  const s3FirstP = s3Start + 1 + inductionDays
-  const enforceDay = Math.min(totalDays, s3FirstP)
-
-  const flexible = buildFlexibleSchedules({
-    totalDays,
-    workDays,
-    restDays,
-    inductionDays,
-    s1Schedule,
-    s2Start: 0,
-    s3Start,
-    enforceDay,
-  })
-
-  if (!flexible) {
-    return {
-      error: 'No se pudo generar un cronograma valido con las reglas actuales.',
-    }
-  }
-
-  const { s2: s2Schedule, s3: s3Schedule } = flexible
+  const totalDays = s1Schedule.length
   const pCount = []
   const errorDays = []
   const threePerf = []
@@ -446,4 +416,114 @@ export const generateSchedule = ({
       patternIssues,
     },
   }
+}
+
+const applyQaOverrides = ({ s1Schedule, s2Schedule, s3Schedule, enforceDay, qa }) => {
+  if (!qa || (!qa.forceThree && !qa.forceOne)) {
+    return { s1Schedule, s2Schedule, s3Schedule }
+  }
+
+  const s1 = s1Schedule.slice()
+  const s2 = s2Schedule.slice()
+  const s3 = s3Schedule.slice()
+  const totalDays = s1.length
+
+  if (totalDays === 0) {
+    return { s1Schedule: s1, s2Schedule: s2, s3Schedule: s3 }
+  }
+
+  const clampDay = (day) => clamp(day, 0, totalDays - 1)
+
+  if (qa.forceThree) {
+    const day = clampDay(enforceDay)
+    s1[day] = STATUS.P
+    s2[day] = STATUS.P
+    s3[day] = STATUS.P
+  }
+
+  if (qa.forceOne) {
+    const day = clampDay(enforceDay + 1)
+    s1[day] = STATUS.D
+    s2[day] = STATUS.D
+    s3[day] = STATUS.P
+  }
+
+  return { s1Schedule: s1, s2Schedule: s2, s3Schedule: s3 }
+}
+
+export const generateSchedule = ({
+  workDays,
+  restDays,
+  inductionDays,
+  totalDays,
+  mode = 'strict',
+  qa = null,
+}) => {
+  const s1Schedule = buildFixedSchedule({
+    totalDays,
+    startDay: 0,
+    workDays,
+    restDays,
+    inductionDays,
+  })
+
+  const firstB = s1Schedule.indexOf(STATUS.B)
+  const s3Start =
+    firstB === -1 ? totalDays : Math.max(0, firstB - (inductionDays + 1))
+  const s3FirstP = s3Start + 1 + inductionDays
+  const enforceDay = Math.min(totalDays, s3FirstP)
+
+  let s2Schedule
+  let s3Schedule
+
+  if (mode === 'baseline') {
+    s2Schedule = buildFixedSchedule({
+      totalDays,
+      startDay: 0,
+      workDays,
+      restDays,
+      inductionDays,
+    })
+    s3Schedule = buildFixedSchedule({
+      totalDays,
+      startDay: s3Start,
+      workDays,
+      restDays,
+      inductionDays,
+    })
+  } else {
+    const flexible = buildFlexibleSchedules({
+      totalDays,
+      workDays,
+      restDays,
+      inductionDays,
+      s1Schedule,
+      s2Start: 0,
+      s3Start,
+      enforceDay,
+    })
+
+    if (!flexible) {
+      return {
+        error: 'No se pudo generar un cronograma valido con las reglas actuales.',
+      }
+    }
+
+    s2Schedule = flexible.s2
+    s3Schedule = flexible.s3
+  }
+
+  const qaSchedules = applyQaOverrides({
+    s1Schedule,
+    s2Schedule,
+    s3Schedule,
+    enforceDay,
+    qa,
+  })
+
+  return buildResultFromSchedules({
+    ...qaSchedules,
+    enforceDay,
+    s3Start,
+  })
 }

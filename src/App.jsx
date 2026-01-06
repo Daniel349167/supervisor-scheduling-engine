@@ -10,6 +10,12 @@ function App() {
     totalDays: 30,
   })
   const [inputIssues, setInputIssues] = useState([])
+  const [qa, setQa] = useState({
+    enabled: false,
+    baseline: false,
+    forceThree: false,
+    forceOne: false,
+  })
   const [result, setResult] = useState(() => generateSchedule(inputs))
 
   const handleChange = (field) => (event) => {
@@ -50,6 +56,24 @@ function App() {
     return issues
   }
 
+  const handleQaChange = (field) => (event) => {
+    const checked = event.target.checked
+    setQa((prev) => {
+      if (field === 'enabled' && !checked) {
+        return {
+          enabled: false,
+          baseline: false,
+          forceThree: false,
+          forceOne: false,
+        }
+      }
+      return {
+        ...prev,
+        [field]: checked,
+      }
+    })
+  }
+
   const handleSubmit = (event) => {
     event.preventDefault()
     const normalized = {
@@ -64,7 +88,14 @@ function App() {
       setResult(null)
       return
     }
-    setResult(generateSchedule(normalized))
+    const mode = qa.enabled && qa.baseline ? 'baseline' : 'strict'
+    const qaConfig = qa.enabled
+      ? {
+          forceThree: qa.forceThree,
+          forceOne: qa.forceOne,
+        }
+      : null
+    setResult(generateSchedule({ ...normalized, mode, qa: qaConfig }))
   }
 
   const dayList = (days) => {
@@ -165,6 +196,51 @@ function App() {
             <button className="cta" type="submit">
               Calcular cronograma
             </button>
+
+            <div className="qa">
+              <div className="qa-header">
+                <span className="qa-title">Modo QA</span>
+                <label className="toggle">
+                  <input
+                    type="checkbox"
+                    checked={qa.enabled}
+                    onChange={handleQaChange('enabled')}
+                  />
+                  <span>Activar</span>
+                </label>
+              </div>
+              {qa.enabled && (
+                <div className="qa-options">
+                  <label className="check">
+                    <input
+                      type="checkbox"
+                      checked={qa.baseline}
+                      onChange={handleQaChange('baseline')}
+                    />
+                    <span>Usar cronograma base (sin ajustes)</span>
+                  </label>
+                  <label className="check">
+                    <input
+                      type="checkbox"
+                      checked={qa.forceThree}
+                      onChange={handleQaChange('forceThree')}
+                    />
+                    <span>Forzar 3 perforando (1 dia)</span>
+                  </label>
+                  <label className="check">
+                    <input
+                      type="checkbox"
+                      checked={qa.forceOne}
+                      onChange={handleQaChange('forceOne')}
+                    />
+                    <span>Forzar 1 perforando (post S3)</span>
+                  </label>
+                </div>
+              )}
+              <span className="field-hint">
+                Activa este modo para probar alertas y recalcula el cronograma.
+              </span>
+            </div>
           </form>
 
           {inputIssues.length > 0 && (
@@ -184,6 +260,13 @@ function App() {
             <h2>Resultado</h2>
             <p>Visualiza el cronograma y las validaciones.</p>
           </div>
+
+          {qa.enabled && (
+            <div className="notice notice-info">
+              <strong>Modo QA activo</strong>
+              <span>Algunos resultados pueden incluir errores forzados.</span>
+            </div>
+          )}
 
           {!result && (
             <div className="notice notice-info">
@@ -213,6 +296,12 @@ function App() {
                   <span className="summary-label">Dias mostrados</span>
                   <strong>{totalDays}</strong>
                 </div>
+                {qa.enabled && (
+                  <div>
+                    <span className="summary-label">Modo QA</span>
+                    <strong>{qa.baseline ? 'Base' : 'Ajustado'}</strong>
+                  </div>
+                )}
               </div>
 
               <div className="legend">
