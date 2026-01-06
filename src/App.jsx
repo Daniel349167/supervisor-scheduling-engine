@@ -3,12 +3,13 @@ import './App.css'
 import { generateSchedule } from './scheduler'
 
 function App() {
-  const [inputs, setInputs] = useState({
+  const initialInputs = {
     workDays: 14,
     restDays: 7,
     inductionDays: 5,
     totalDays: 30,
-  })
+  }
+  const [inputs, setInputs] = useState(initialInputs)
   const [inputIssues, setInputIssues] = useState([])
   const [qa, setQa] = useState({
     enabled: false,
@@ -16,7 +17,15 @@ function App() {
     forceThree: false,
     forceOne: false,
   })
-  const [result, setResult] = useState(() => generateSchedule(inputs))
+  const [result, setResult] = useState(() => {
+    const dayOffset = initialInputs.inductionDays + 1
+    const scheduleDays = initialInputs.totalDays + dayOffset
+    const schedule = generateSchedule({ ...initialInputs, totalDays: scheduleDays })
+    if (schedule?.error) {
+      return schedule
+    }
+    return { ...schedule, meta: { displayDays: initialInputs.totalDays, dayOffset } }
+  })
 
   const handleChange = (field) => (event) => {
     const value = event.target.value
@@ -95,16 +104,40 @@ function App() {
           forceOne: qa.forceOne,
         }
       : null
-    setResult(generateSchedule({ ...normalized, mode, qa: qaConfig }))
+    const dayOffsetValue = normalized.inductionDays + 1
+    const scheduleDays = normalized.totalDays + dayOffsetValue
+    const schedule = generateSchedule({
+      ...normalized,
+      totalDays: scheduleDays,
+      mode,
+      qa: qaConfig,
+    })
+    if (schedule?.error) {
+      setResult(schedule)
+      return
+    }
+    setResult({
+      ...schedule,
+      meta: { displayDays: normalized.totalDays, dayOffset: dayOffsetValue },
+    })
   }
 
-  const dayLabel = (day) => day + 1
+  const dayOffset = result?.meta?.dayOffset ?? 0
+  const dayLabel = (day) => {
+    const value = day - dayOffset + 1
+    return value >= 1 ? value : ''
+  }
+
+  const summaryDay = (day) => {
+    const label = dayLabel(day)
+    return label === '' ? 'Antes del dia 1' : label
+  }
 
   const dayList = (days) => {
     if (!days || days.length === 0) {
       return '0'
     }
-    const labeledDays = days.map(dayLabel)
+    const labeledDays = days.map(dayLabel).filter((value) => value !== '')
     if (labeledDays.length <= 12) {
       return labeledDays.join(', ')
     }
@@ -130,7 +163,8 @@ function App() {
   }
 
   const dayErrors = new Set(result?.issues?.errorDays ?? [])
-  const totalDays = result?.pCount?.length ?? 0
+  const scheduleDays = result?.pCount?.length ?? 0
+  const displayDays = result?.meta?.displayDays ?? 0
 
   return (
     <div className="app">
@@ -289,15 +323,15 @@ function App() {
               <div className="summary">
                 <div>
                   <span className="summary-label">S3 sube dia</span>
-                  <strong>{dayLabel(result.s3Start)}</strong>
+                  <strong>{summaryDay(result.s3Start)}</strong>
                 </div>
                 <div>
                   <span className="summary-label">Regla estricta desde</span>
-                  <strong>{dayLabel(result.enforceDay)}</strong>
+                  <strong>{summaryDay(result.enforceDay)}</strong>
                 </div>
                 <div>
                   <span className="summary-label">Dias mostrados</span>
-                  <strong>{totalDays}</strong>
+                  <strong>{displayDays}</strong>
                 </div>
                 {qa.enabled && (
                   <div>
@@ -357,9 +391,9 @@ function App() {
                     <div className="row-label">Dia</div>
                     <div
                       className="row-cells"
-                      style={{ gridTemplateColumns: `repeat(${totalDays}, var(--cell))` }}
+                      style={{ gridTemplateColumns: `repeat(${scheduleDays}, var(--cell))` }}
                     >
-                      {Array.from({ length: totalDays }, (_, day) => (
+                      {Array.from({ length: scheduleDays }, (_, day) => (
                         <div key={`day-${day}`} className="cell cell-day">
                           {dayLabel(day)}
                         </div>
@@ -376,7 +410,7 @@ function App() {
                       <div className="row-label">{row.label}</div>
                       <div
                         className="row-cells"
-                        style={{ gridTemplateColumns: `repeat(${totalDays}, var(--cell))` }}
+                        style={{ gridTemplateColumns: `repeat(${scheduleDays}, var(--cell))` }}
                       >
                         {row.data.map((status, day) => (
                           <div key={`${row.label}-${day}`} className={`cell ${statusClass(status)}`}>
@@ -391,7 +425,7 @@ function App() {
                     <div className="row-label">#P</div>
                     <div
                       className="row-cells"
-                      style={{ gridTemplateColumns: `repeat(${totalDays}, var(--cell))` }}
+                      style={{ gridTemplateColumns: `repeat(${scheduleDays}, var(--cell))` }}
                     >
                       {result.pCount.map((count, day) => (
                         <div
