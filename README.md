@@ -1,6 +1,6 @@
-# Cronos Supervisores
+# Supervisor Scheduling Engine
 
-Aplicacion web en React (Vite) que genera un cronograma para 3 supervisores de
+Motor de programacion de turnos con interfaz React/Vite. Genera un cronograma para tres supervisores de
 perforacion cumpliendo las reglas del enunciado: siempre 2 perforando, nunca 3,
 S1 fijo y S2/S3 ajustables.
 
@@ -65,4 +65,4 @@ GitHub Pages (GitHub Actions):
 2. Sube los cambios a GitHub (`main` o `master`).
 3. En GitHub: Settings -> Pages -> Build and deployment -> Source: GitHub Actions.
 4. El workflow `.github/workflows/deploy.yml` publicara automaticamente.
-5. URL esperada: `https://daniel349167.github.io/cronograma-supervisores/`.
+5. URL: `https://daniel349167.github.io/supervisor-scheduling-engine/`.
